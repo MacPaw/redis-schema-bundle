@@ -1,0 +1,48 @@
+{
+    "name": "macpaw/redis-schema-bundle",
+    "description": "A Symfony bundle to add schema prefixes for redis keys",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Macpaw\\RedisSchemaBundle\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Macpaw\\RedisSchemaBundle\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.3",
+        "macpaw/schema-context-bundle": "^1.0",
+        "symfony/cache": "^7.3"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1.10",
+        "phpunit/phpunit": "^10.0",
+        "squizlabs/php_codesniffer": "3.7.*"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "scripts": {
+        "composer-validate": [
+            "composer validate"
+        ],
+        "cs": [
+            "vendor/bin/phpcs"
+        ],
+        "cs-fix": [
+            "vendor/bin/phpcbf"
+        ],
+        "phpstan": [
+            "vendor/bin/phpstan analyse"
+        ],
+        "phpunit": [
+            "vendor/bin/phpunit"
+        ]
+    }
+}

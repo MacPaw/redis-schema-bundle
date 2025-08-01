@@ -16,7 +16,7 @@
     "require": {
         "php": ">=8.3",
         "macpaw/schema-context-bundle": "^1.0",
-        "symfony/cache": "^7.3"
+        "symfony/cache": "^6.4|^7.0"
     },
     "require-dev": {
         "phpstan/phpstan": "^1.10",

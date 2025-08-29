@@ -9,9 +9,10 @@ use Psr\Cache\CacheItemInterface;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Cache\CacheItem;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
+use Symfony\Component\Cache\ResettableInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 
-class SchemaAwareRedisAdapter implements AdapterInterface, CacheInterface
+class SchemaAwareRedisAdapter implements AdapterInterface, CacheInterface, ResettableInterface
 {
     public function __construct(
         private readonly RedisAdapter $decorated,
@@ -93,5 +94,10 @@ class SchemaAwareRedisAdapter implements AdapterInterface, CacheInterface
     public function delete(string $key): bool
     {
         return $this->decorated->delete($this->prefixKey($key));
+    }
+
+    public function reset(): void
+    {
+        $this->decorated->clear($this->resolver->getSchema() ?? '');
     }
 }

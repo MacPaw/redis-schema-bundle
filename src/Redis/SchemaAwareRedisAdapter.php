@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Macpaw\RedisSchemaBundle\Redis;
 
-use Macpaw\SchemaContextBundle\Service\SchemaResolver;
+use Macpaw\SchemaContextBundle\Service\BaggageSchemaResolver;
 use Psr\Cache\CacheItemInterface;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Cache\CacheItem;
@@ -15,7 +15,7 @@ class SchemaAwareRedisAdapter implements AdapterInterface, CacheInterface
 {
     public function __construct(
         private readonly RedisAdapter $decorated,
-        private readonly SchemaResolver $resolver,
+        private readonly BaggageSchemaResolver $resolver,
     ) {
     }
 

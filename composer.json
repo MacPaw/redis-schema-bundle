@@ -15,7 +15,7 @@
     },
     "require": {
         "php": ">=8.3",
-        "macpaw/schema-context-bundle": "^1.0",
+        "macpaw/schema-context-bundle": "^1.1",
         "symfony/cache": "^6.4|^7.0"
     },
     "require-dev": {

@@ -46,7 +46,7 @@ services:
         decorates: Symfony\Component\Cache\Adapter\RedisAdapter
         arguments:
             - '@.inner'
-            - '@Macpaw\SchemaContextBundle\Service\SchemaResolver'
+            - '@Macpaw\SchemaContextBundle\Service\BaggageSchemaResolver'
 ```
 
 ## Usage

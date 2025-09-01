@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Macpaw\RedisSchemaBundle\Tests\Redis;
 
 use Macpaw\RedisSchemaBundle\Redis\SchemaAwareRedisAdapter;
-use Macpaw\SchemaContextBundle\Service\SchemaResolver;
+use Macpaw\SchemaContextBundle\Service\BaggageSchemaResolver;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
@@ -16,13 +16,13 @@ use Psr\Cache\CacheItemInterface;
 class SchemaAwareRedisAdapterTest extends TestCase
 {
     private RedisAdapter&CacheInterface&MockObject $decorated;
-    private SchemaResolver $resolver;
+    private BaggageSchemaResolver $resolver;
     private SchemaAwareRedisAdapter $adapter;
 
     protected function setUp(): void
     {
         $this->decorated = $this->createMock(RedisAdapter::class);
-        $this->resolver = $this->createMock(SchemaResolver::class);
+        $this->resolver = $this->createMock(BaggageSchemaResolver::class);
         $this->resolver->method('getSchema')->willReturn('test_schema');
 
         $this->adapter = new SchemaAwareRedisAdapter($this->decorated, $this->resolver);

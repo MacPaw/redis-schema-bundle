@@ -24,7 +24,7 @@ class SchemaAwareRedisAdapter implements AdapterInterface, CacheInterface, Reset
     {
         $schema = $this->resolver->getSchema();
 
-        return $schema ? $schema . '.' . $key : $key;
+        return $schema === $this->resolver->getEnvironmentSchema() ? $key : $schema . '.' . $key;
     }
 
     public function clear(string $prefix = ''): bool
@@ -98,6 +98,8 @@ class SchemaAwareRedisAdapter implements AdapterInterface, CacheInterface, Reset
 
     public function reset(): void
     {
-        $this->decorated->clear($this->resolver->getSchema() ?? '');
+        $schema = $this->resolver->getSchema();
+
+        $this->decorated->clear($schema === $this->resolver->getEnvironmentSchema() ? '' : $schema);
     }
 }

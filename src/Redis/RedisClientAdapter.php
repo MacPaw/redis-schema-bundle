@@ -72,6 +72,9 @@ class RedisClientAdapter implements ClientInterface
         return $this->decorated->getConnection();
     }
 
+    /**
+     * @param array<array-key, mixed> $arguments
+     */
     public function createCommand($method, $arguments = []): CommandInterface
     {
         return $this->decorated->createCommand($method, $arguments);
@@ -82,6 +85,9 @@ class RedisClientAdapter implements ClientInterface
         return $this->decorated->executeCommand($command);
     }
 
+    /**
+     * @param array<array-key, mixed> $arguments
+     */
     public function __call($method, $arguments): mixed
     {
         if (in_array($method, $this->decoratedCallMethods, true)) {

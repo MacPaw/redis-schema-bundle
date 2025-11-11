@@ -4,21 +4,23 @@ declare(strict_types=1);
 
 namespace Macpaw\RedisSchemaBundle\Tests\Stub;
 
+use Predis\Client;
 use Predis\Command\CommandInterface;
 use Predis\Command\FactoryInterface;
 use Predis\Configuration\OptionsInterface;
 use Predis\Connection\ConnectionInterface;
 use SymfonyBundles\RedisBundle\Redis\ClientInterface;
 
-class TestRedisClient implements ClientInterface
+class TestRedisClient extends Client implements ClientInterface
 {
+    // @phpstan-ignore-next-line
     public array $calls = [];
 
     public ?FactoryInterface $factory = null;
     public ?OptionsInterface $options = null;
     public ?ConnectionInterface $connection = null;
 
-    public mixed $createCommandReturn = null;
+    public ?CommandInterface $createCommandReturn = null;
     public mixed $executeCommandReturn = null;
 
     public ?string $popReturn = null;
@@ -29,7 +31,7 @@ class TestRedisClient implements ClientInterface
     public bool $connected = false;
     public bool $disconnected = false;
 
-    /** @var array<string, callable(array):mixed> */
+    // @phpstan-ignore-next-line
     public array $dynamicHandlers = [];
 
     public function pop(string $key): ?string
@@ -83,6 +85,9 @@ class TestRedisClient implements ClientInterface
         return $this->connection ?? throw new \RuntimeException('connection not set');
     }
 
+    /**
+     * @param array<array-key, mixed> $arguments
+     */
     public function createCommand($method, $arguments = []): CommandInterface
     {
         $this->calls[] = ['method' => 'createCommand', 'args' => [$method, $arguments]];
@@ -92,13 +97,17 @@ class TestRedisClient implements ClientInterface
     public function executeCommand(CommandInterface $command): mixed
     {
         $this->calls[] = ['method' => 'executeCommand', 'args' => [$command]];
+
         return $this->executeCommandReturn;
     }
 
+    /**
+     * @param array<array-key, mixed> $arguments
+     */
     public function __call($name, $arguments)
     {
         $this->calls[] = ['method' => $name, 'args' => $arguments];
-        if (isset($this->dynamicHandlers[$name])) {
+        if (array_key_exists($name, $this->dynamicHandlers)) {
             return ($this->dynamicHandlers[$name])($arguments);
         }
         throw new \BadMethodCallException("No handler for dynamic method {$name}");

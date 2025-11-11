@@ -9,8 +9,10 @@ use Macpaw\RedisSchemaBundle\Tests\Stub\TestRedisClient;
 use Macpaw\SchemaContextBundle\Service\BaggageSchemaResolver;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Predis\Command\CommandInterface;
 use Predis\Command\CommandInterface as PredisCommandInterface;
 use Predis\Command\FactoryInterface as PredisFactoryInterface;
+use Predis\Command\Redis\PING;
 use Predis\Configuration\OptionsInterface as PredisOptionsInterface;
 use Predis\Connection\ConnectionInterface as PredisConnectionInterface;
 
@@ -129,16 +131,16 @@ class RedisClientAdapterTest extends TestCase
     {
         $this->resolver->method('getSchema')->willReturn('s');
         $client = new TestRedisClient();
-        $client->dynamicHandlers['xhmget'] = function (array $args) {
+        $client->dynamicHandlers['hmget'] = function (array $args) {
             return ['value1', 'value2'];
         };
 
-        $adapter = new RedisClientAdapter($this->resolver, $client, null, ['xhmget']);
+        $adapter = new RedisClientAdapter($this->resolver, $client, null, ['hmget']);
 
-        $result = $adapter->xhmget('hash', 'field1', 'field2');
+        $result = $adapter->hmget('hash', ['field1']);
         self::assertSame(['value1', 'value2'], $result);
         self::assertSame([
-            ['method' => 'xhmget', 'args' => ['s.hash', 'field1', 'field2']],
+            ['method' => 'hmget', 'args' => ['s.hash', ['field1']]],
         ], $client->calls);
     }
 
@@ -146,17 +148,17 @@ class RedisClientAdapterTest extends TestCase
     {
         $this->resolver->method('getSchema')->willReturn('s');
         $client = new TestRedisClient();
-        $client->dynamicHandlers['xhmget'] = function (array $args) {
+        $client->dynamicHandlers['hmget'] = function (array $args) {
             return ['v'];
         };
 
-        $adapter = new RedisClientAdapter($this->resolver, $client, null, ['xhmget']);
+        $adapter = new RedisClientAdapter($this->resolver, $client, null, ['hmget']);
 
-        $firstArg = ['hash'];
-        $result = $adapter->xhmget($firstArg, 'field');
+        $firstArg = 'hash';
+        $result = $adapter->hmget($firstArg, ['field']);
         self::assertSame(['v'], $result);
         self::assertSame([
-            ['method' => 'xhmget', 'args' => [$firstArg, 'field']],
+            ['method' => 'hmget', 'args' => ['s.'.$firstArg, ['field']]],
         ], $client->calls);
     }
 
@@ -169,6 +171,7 @@ class RedisClientAdapterTest extends TestCase
         // Not listing 'custom' in decoratedCallMethods, so it should not prefix the key
         $adapter = new RedisClientAdapter($this->resolver, $client, null, ['xhmget']);
 
+        // @phpstan-ignore-next-line
         $result = $adapter->custom('key', 'arg');
         self::assertSame('ok', $result);
         self::assertSame([
@@ -180,14 +183,14 @@ class RedisClientAdapterTest extends TestCase
     {
         $this->resolver->method('getSchema')->willReturn('pref');
         $client = new TestRedisClient();
-        $client->dynamicHandlers['xping'] = fn(array $args) => 'PONG';
+        $client->dynamicHandlers['ping'] = fn(array $args) => 'PONG';
 
-        $adapter = new RedisClientAdapter($this->resolver, $client, null, ['xping']);
+        $adapter = new RedisClientAdapter($this->resolver, $client, null, ['ping']);
 
-        $result = $adapter->xping();
+        $result = $adapter->ping();
         self::assertSame('PONG', $result);
         self::assertSame([
-            ['method' => 'xping', 'args' => []],
+            ['method' => 'ping', 'args' => []],
         ], $client->calls);
     }
 }

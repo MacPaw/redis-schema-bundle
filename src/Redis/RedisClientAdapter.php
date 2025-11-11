@@ -21,7 +21,7 @@ class RedisClientAdapter implements ClientInterface
          * Method names that should be prefixed with the schema which not present in interfaces
          * like a hmget, hset, etc.
          *
-         * @var array<string>
+         * @var array<array-key, string>
          */
         private readonly array $decoratedCallMethods = [],
     ) {

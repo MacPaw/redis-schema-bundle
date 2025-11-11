@@ -243,6 +243,7 @@ class SchemaAwarePRedisClientTest extends TestCase
 
         $nonScalar = new \stdClass();
         $firstArg = ['k1', ['nested'], $nonScalar, 5, 7.5, true, null];
+        // @phpstan-ignore-next-line
         $result = $adapter->watch($firstArg);
         self::assertSame(1, $result);
 

@@ -13,6 +13,9 @@ use SymfonyBundles\RedisBundle\Redis\ClientInterface;
 
 class SchemaAwarePRedisClient implements ClientInterface
 {
+    /**
+     * @var array<array-key, string>
+     */
     protected readonly array $decoratedCallMethods;
 
     /**

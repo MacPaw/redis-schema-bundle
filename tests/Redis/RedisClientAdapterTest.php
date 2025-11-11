@@ -24,6 +24,7 @@ class RedisClientAdapterTest extends TestCase
     protected function setUp(): void
     {
         $this->resolver = $this->createMock(BaggageSchemaResolver::class);
+        $this->resolver->method('getEnvironmentSchema')->willReturn('public');
     }
 
     public function testPopPrefixesKeyWithSchema(): void
@@ -73,10 +74,10 @@ class RedisClientAdapterTest extends TestCase
 
     public function testDefaultSchemaSkipsPrefixing(): void
     {
-        $this->resolver->method('getSchema')->willReturn('prod');
+        $this->resolver->method('getSchema')->willReturn('public');
         $client = new TestRedisClient();
 
-        $adapter = new RedisClientAdapter($this->resolver, $client, 'prod');
+        $adapter = new RedisClientAdapter($this->resolver, $client);
 
         self::assertNull($adapter->pop('plain'));
         self::assertSame([
@@ -84,9 +85,9 @@ class RedisClientAdapterTest extends TestCase
         ], $client->calls);
     }
 
-    public function testNoSchemaReturnsKeyAsIs(): void
+    public function testDefaultSchemaReturnsKeyAsIs(): void
     {
-        $this->resolver->method('getSchema')->willReturn(null);
+        $this->resolver->method('getSchema')->willReturn('public');
         $client = new TestRedisClient();
         $client->pushReturn = 1;
 
@@ -135,7 +136,7 @@ class RedisClientAdapterTest extends TestCase
             return ['value1', 'value2'];
         };
 
-        $adapter = new RedisClientAdapter($this->resolver, $client, null, ['hmget']);
+        $adapter = new RedisClientAdapter($this->resolver, $client, ['hmget']);
 
         $result = $adapter->hmget('hash', ['field1']);
         self::assertSame(['value1', 'value2'], $result);
@@ -152,7 +153,7 @@ class RedisClientAdapterTest extends TestCase
             return ['v'];
         };
 
-        $adapter = new RedisClientAdapter($this->resolver, $client, null, ['hmget']);
+        $adapter = new RedisClientAdapter($this->resolver, $client, ['hmget']);
 
         $firstArg = 'hash';
         $result = $adapter->hmget($firstArg, ['field']);
@@ -169,7 +170,7 @@ class RedisClientAdapterTest extends TestCase
         $client->dynamicHandlers['custom'] = fn(array $args) => 'ok';
 
         // Not listing 'custom' in decoratedCallMethods, so it should not prefix the key
-        $adapter = new RedisClientAdapter($this->resolver, $client, null, ['xhmget']);
+        $adapter = new RedisClientAdapter($this->resolver, $client, ['xhmget']);
 
         // @phpstan-ignore-next-line
         $result = $adapter->custom('key', 'arg');
@@ -185,7 +186,7 @@ class RedisClientAdapterTest extends TestCase
         $client = new TestRedisClient();
         $client->dynamicHandlers['ping'] = fn(array $args) => 'PONG';
 
-        $adapter = new RedisClientAdapter($this->resolver, $client, null, ['ping']);
+        $adapter = new RedisClientAdapter($this->resolver, $client, ['ping']);
 
         $result = $adapter->ping();
         self::assertSame('PONG', $result);

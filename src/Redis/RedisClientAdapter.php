@@ -16,7 +16,6 @@ class RedisClientAdapter implements ClientInterface
     public function __construct(
         private BaggageSchemaResolver $resolver,
         private ClientInterface $decorated,
-        private readonly ?string $defaultSchema = null,
         /**
          * Method names that should be prefixed with the schema which not present in interfaces
          * like a hmget, hset, etc.
@@ -104,10 +103,6 @@ class RedisClientAdapter implements ClientInterface
     {
         $schema = $this->resolver->getSchema();
 
-        if ($this->defaultSchema !== null && $schema === $this->defaultSchema) {
-            return $key;
-        }
-
-        return $schema ? $schema . '.' . $key : $key;
+        return $schema === $this->resolver->getEnvironmentSchema() ? $key : $schema . '.' . $key;
     }
 }

@@ -55,7 +55,7 @@ Decorate predis client with symfony-bundles/redis-bundle:
 # config/services.yaml
 
 services:
-    Macpaw\RedisSchemaBundle\Redis\RedisClientAdapter:
+    Macpaw\RedisSchemaBundle\Redis\SchemaAwarePRedisClient:
         decorates: SymfonyBundles\RedisBundle\Redis\ClientInterface
         arguments:
             - '@.inner'

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Macpaw\RedisSchemaBundle\Tests\Redis;
 
-use Macpaw\RedisSchemaBundle\Redis\RedisClientAdapter;
+use Macpaw\RedisSchemaBundle\Redis\SchemaAwarePRedisClient;
 use Macpaw\RedisSchemaBundle\Tests\Stub\TestRedisClient;
 use Macpaw\SchemaContextBundle\Service\BaggageSchemaResolver;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -16,7 +16,7 @@ use Predis\Command\Redis\PING;
 use Predis\Configuration\OptionsInterface as PredisOptionsInterface;
 use Predis\Connection\ConnectionInterface as PredisConnectionInterface;
 
-class RedisClientAdapterTest extends TestCase
+class SchemaAwarePRedisClientTest extends TestCase
 {
     /** @var BaggageSchemaResolver&MockObject */
     private BaggageSchemaResolver $resolver;
@@ -33,7 +33,7 @@ class RedisClientAdapterTest extends TestCase
         $client = new TestRedisClient();
         $client->popReturn = 'value';
 
-        $adapter = new RedisClientAdapter($this->resolver, $client);
+        $adapter = new SchemaAwarePRedisClient($this->resolver, $client);
 
         self::assertSame('value', $adapter->pop('mykey'));
         self::assertSame([
@@ -47,7 +47,7 @@ class RedisClientAdapterTest extends TestCase
         $client = new TestRedisClient();
         $client->pushReturn = 3;
 
-        $adapter = new RedisClientAdapter($this->resolver, $client);
+        $adapter = new SchemaAwarePRedisClient($this->resolver, $client);
 
         self::assertSame(3, $adapter->push('list', 'a', 2, true));
         self::assertSame([
@@ -62,7 +62,7 @@ class RedisClientAdapterTest extends TestCase
         $client->countReturn = 5;
         $client->removeReturn = 1;
 
-        $adapter = new RedisClientAdapter($this->resolver, $client);
+        $adapter = new SchemaAwarePRedisClient($this->resolver, $client);
 
         self::assertSame(5, $adapter->count('queue'));
         self::assertSame(1, $adapter->remove('to_remove'));
@@ -77,7 +77,7 @@ class RedisClientAdapterTest extends TestCase
         $this->resolver->method('getSchema')->willReturn('public');
         $client = new TestRedisClient();
 
-        $adapter = new RedisClientAdapter($this->resolver, $client);
+        $adapter = new SchemaAwarePRedisClient($this->resolver, $client);
 
         self::assertNull($adapter->pop('plain'));
         self::assertSame([
@@ -91,7 +91,7 @@ class RedisClientAdapterTest extends TestCase
         $client = new TestRedisClient();
         $client->pushReturn = 1;
 
-        $adapter = new RedisClientAdapter($this->resolver, $client);
+        $adapter = new SchemaAwarePRedisClient($this->resolver, $client);
 
         self::assertSame(1, $adapter->push('name', 'x'));
         self::assertSame([
@@ -113,7 +113,7 @@ class RedisClientAdapterTest extends TestCase
         $client->createCommandReturn = $command;
         $client->executeCommandReturn = 'PONG';
 
-        $adapter = new RedisClientAdapter($this->resolver, $client);
+        $adapter = new SchemaAwarePRedisClient($this->resolver, $client);
 
         self::assertSame($factory, $adapter->getCommandFactory());
         self::assertSame($options, $adapter->getOptions());
@@ -136,7 +136,7 @@ class RedisClientAdapterTest extends TestCase
             return ['value1', 'value2'];
         };
 
-        $adapter = new RedisClientAdapter($this->resolver, $client, ['hmget']);
+        $adapter = new SchemaAwarePRedisClient($this->resolver, $client, ['hmget']);
 
         $result = $adapter->hmget('hash', ['field1']);
         self::assertSame(['value1', 'value2'], $result);
@@ -153,7 +153,7 @@ class RedisClientAdapterTest extends TestCase
             return ['v'];
         };
 
-        $adapter = new RedisClientAdapter($this->resolver, $client, ['hmget']);
+        $adapter = new SchemaAwarePRedisClient($this->resolver, $client, ['hmget']);
 
         $firstArg = 'hash';
         $result = $adapter->hmget($firstArg, ['field']);
@@ -170,7 +170,7 @@ class RedisClientAdapterTest extends TestCase
         $client->dynamicHandlers['custom'] = fn(array $args) => 'ok';
 
         // Not listing 'custom' in decoratedCallMethods, so it should not prefix the key
-        $adapter = new RedisClientAdapter($this->resolver, $client, ['xhmget']);
+        $adapter = new SchemaAwarePRedisClient($this->resolver, $client, ['xhmget']);
 
         // @phpstan-ignore-next-line
         $result = $adapter->custom('key', 'arg');
@@ -186,7 +186,7 @@ class RedisClientAdapterTest extends TestCase
         $client = new TestRedisClient();
         $client->dynamicHandlers['ping'] = fn(array $args) => 'PONG';
 
-        $adapter = new RedisClientAdapter($this->resolver, $client, ['ping']);
+        $adapter = new SchemaAwarePRedisClient($this->resolver, $client, ['ping']);
 
         $result = $adapter->ping();
         self::assertSame('PONG', $result);

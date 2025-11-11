@@ -11,7 +11,7 @@ use Predis\Configuration\OptionsInterface;
 use Predis\Connection\ConnectionInterface;
 use SymfonyBundles\RedisBundle\Redis\ClientInterface;
 
-class RedisClientAdapter implements ClientInterface
+class SchemaAwarePRedisClient implements ClientInterface
 {
     public function __construct(
         private BaggageSchemaResolver $resolver,

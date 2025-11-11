@@ -6,7 +6,7 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  php-cs-fixer:
+  php-code-sniffer:
     name: PHP Code Sniffer
     runs-on: ubuntu-latest
     steps:

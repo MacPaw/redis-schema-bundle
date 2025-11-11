@@ -194,4 +194,71 @@ class SchemaAwarePRedisClientTest extends TestCase
             ['method' => 'ping', 'args' => []],
         ], $client->calls);
     }
+
+    public function testMagicCallDefaultMethodsScalarFirstArg(): void
+    {
+        $this->resolver->method('getSchema')->willReturn('s');
+        $client = new TestRedisClient();
+        $client->dynamicHandlers['get'] = static function (array $args) {
+            return 'val';
+        };
+
+        // No third parameter passed -> use default decorated methods list
+        $adapter = new SchemaAwarePRedisClient($this->resolver, $client);
+
+        $result = $adapter->get('key1');
+        self::assertSame('val', $result);
+        self::assertSame([
+            ['method' => 'get', 'args' => ['s.key1']],
+        ], $client->calls);
+    }
+
+    public function testMagicCallDefaultMethodsArrayOfScalarsAsFirstArg(): void
+    {
+        $this->resolver->method('getSchema')->willReturn('s');
+        $client = new TestRedisClient();
+        $client->dynamicHandlers['del'] = static function (array $args) {
+            return 2; // pretend two keys exist
+        };
+
+        $adapter = new SchemaAwarePRedisClient($this->resolver, $client);
+
+        // Pass an array of scalar keys as the first argument
+        $result = $adapter->del(['k1', 'k2']);
+        self::assertSame(2, $result);
+        self::assertSame([
+            ['method' => 'del', 'args' => [['s.k1', 's.k2']]],
+        ], $client->calls);
+    }
+
+    public function testMagicCallDefaultMethodsArrayWithMixedScalarsAndNonScalars(): void
+    {
+        $this->resolver->method('getSchema')->willReturn('s');
+        $client = new TestRedisClient();
+        $client->dynamicHandlers['watch'] = static function (array $args) {
+            return 1;
+        };
+
+        $adapter = new SchemaAwarePRedisClient($this->resolver, $client);
+
+        $nonScalar = new \stdClass();
+        $firstArg = ['k1', ['nested'], $nonScalar, 5, 7.5, true, null];
+        $result = $adapter->watch($firstArg);
+        self::assertSame(1, $result);
+
+        self::assertSame([
+            [
+                'method' => 'watch',
+                'args' => [[
+                    's.k1',
+                    ['nested'],
+                    $nonScalar,
+                    5,
+                    7.5,
+                    true,
+                    null,
+                ]],
+            ],
+        ], $client->calls);
+    }
 }

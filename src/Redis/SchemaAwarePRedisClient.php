@@ -13,17 +13,19 @@ use SymfonyBundles\RedisBundle\Redis\ClientInterface;
 
 class SchemaAwarePRedisClient implements ClientInterface
 {
+    protected readonly array $decoratedCallMethods;
+
+    /**
+     * @param array<array-key, string> $decoratedCallMethods Method names that should be prefixed with
+     * the schema which not present in interfaces like a hmget, hset, etc.
+     */
     public function __construct(
         private BaggageSchemaResolver $resolver,
         private ClientInterface $decorated,
-        /**
-         * Method names that should be prefixed with the schema which not present in interfaces
-         * like a hmget, hset, etc.
-         *
-         * @var array<array-key, string>
-         */
-        private readonly array $decoratedCallMethods = [],
+        array $decoratedCallMethods = [],
     ) {
+        $this->decoratedCallMethods = count($decoratedCallMethods) === 0 ? $this->getDefaultDecoratedMethods()
+            : $decoratedCallMethods;
     }
 
     public function pop(string $key): ?string
@@ -90,9 +92,18 @@ class SchemaAwarePRedisClient implements ClientInterface
     public function __call($method, $arguments): mixed
     {
         if (in_array($method, $this->decoratedCallMethods, true)) {
-            // Automatically prefix the first argument if it's a string
-            if (array_key_exists(0, $arguments) && is_scalar($arguments[0])) {
-                $arguments[0] = $this->prefixKey((string) $arguments[0]);
+            // Automatically prefix the first argument if it's a string or an array of strings
+            if (array_key_exists(0, $arguments)) {
+                if (is_string($arguments[0])) {
+                    $arguments[0] = $this->prefixKey($arguments[0]);
+                }
+
+                if (is_array($arguments[0])) {
+                    $arguments[0] = array_map(
+                        fn(mixed $value): mixed => is_string($value) ? $this->prefixKey($value) : $value,
+                        $arguments[0]
+                    );
+                }
             }
         }
 
@@ -104,5 +115,89 @@ class SchemaAwarePRedisClient implements ClientInterface
         $schema = $this->resolver->getSchema();
 
         return $schema === $this->resolver->getEnvironmentSchema() ? $key : $schema . '.' . $key;
+    }
+
+    /**
+     * @return array<array-key, string>
+     */
+    private function getDefaultDecoratedMethods(): array
+    {
+        return [
+            // Basic key ops
+            'copy', 'dump', 'exists', 'expire', 'expireat', 'expiretime', 'move', 'rename', 'renamenx',
+            'sort', 'sort_ro', 'ttl', 'pttl', 'type', 'append', 'del', 'watch', 'unwatch', 'persist', 'touch',
+            'pexpire', 'pexpireat',
+
+            // Bloom filter (BF*)
+            'bfadd', 'bfexists', 'bfinfo', 'bfinsert', 'bfloadchunk', 'bfmadd', 'bfmexists',
+            'bfreserve', 'bfscandump',
+
+            // Bit operations
+            'bitcount', 'bitfield', 'bitfield_ro', 'bitpos',
+
+            // Cuckoo filter (CF*)
+            'cfadd', 'cfaddnx', 'cfcount', 'cfdel', 'cfexists', 'cfloadchunk', 'cfmexists',
+            'cfinfo', 'cfinsert', 'cfinsertnx', 'cfreserve', 'cfscandump',
+
+            // Count-Min Sketch (CMS*)
+            'cmsincrby', 'cmsinfo', 'cmsinitbydim', 'cmsinitbyprob', 'cmsmerge', 'cmsquery',
+
+            // String counters / String ops
+            'decr', 'decrby', 'get', 'getbit', 'getex', 'getrange', 'getdel', 'getset', 'incr', 'incrby', 'incrbyfloat',
+            'mget', 'psetex', 'set', 'setbit', 'setex', 'setnx', 'setrange', 'strlen',
+
+            // Hashes (H*)
+            'hdel', 'hexists', 'hexpire', 'hexpireat', 'hexpiretime', 'hpersist', 'hpexpire',
+            'hpexpireat', 'hpexpiretime', 'hget', 'hgetex', 'hgetall', 'hgetdel', 'hincrby',
+            'hincrbyfloat', 'hkeys', 'hlen', 'hmget', 'hmset', 'hrandfield', 'hscan', 'hset',
+            'hsetex', 'hsetnx', 'httl', 'hpttl', 'hvals', 'hstrlen',
+
+            // JSON (ReJSON)
+            'jsonarrappend', 'jsonarrindex', 'jsonarrinsert', 'jsonarrlen', 'jsonarrpop',
+            'jsonclear', 'jsonarrtrim', 'jsondel', 'jsonforget', 'jsonget', 'jsonnumincrby',
+            'jsonmerge', 'jsonmget', 'jsonobjkeys', 'jsonobjlen', 'jsonresp', 'jsonset', 'jsonstrappend',
+            'jsonstrlen', 'jsontoggle', 'jsontype',
+
+            // Lists (L*)
+            'blmove', 'blpop', 'brpop', 'brpoplpush', 'lcs', 'lindex', 'linsert', 'llen', 'lmove', 'lmpop',
+            'lpop', 'lpush', 'lpushx',
+            'lrange', 'lrem', 'lset', 'ltrim', 'rpop', 'rpoplpush', 'rpush', 'rpushx',
+
+            // Sets (S*)
+            'sadd', 'scard', 'sdiff', 'sdiffstore', 'sinter', 'sintercard', 'sinterstore',
+            'sismember', 'smembers', 'smismember',
+            'smove', 'spop', 'srandmember', 'srem', 'sscan', 'sunion', 'sunionstore',
+
+            // T-Digest (TDIGEST*)
+            'tdigestadd', 'tdigestbyrank', 'tdigestbyrevrank', 'tdigestcdf', 'tdigestcreate',
+            'tdigestinfo', 'tdigestmax', 'tdigestmerge', 'tdigestquantile', 'tdigestmin', 'tdigestrank',
+            'tdigestreset', 'tdigestrevrank', 'tdigesttrimmed_mean',
+
+            // TOP-K (TOPK*)
+            'topkadd', 'topkincrby', 'topkinfo', 'topklist', 'topkquery', 'topkreserve',
+
+            // TimeSeries (TS*)
+            'tsadd', 'tsalter', 'tscreate', 'tscreaterule', 'tsdecrby', 'tsdel', 'tsdeleterule',
+            'tsget', 'tsincrby', 'tsinfo', 'tsrange', 'tsrevrange',
+
+            // Streams (X*)
+            'xadd', 'xdel', 'xlen', 'xrevrange', 'xrange', 'xtrim',
+
+            // Sorted sets (Z*)
+            'zadd', 'zcard', 'zcount', 'zdiff', 'zdiffstore', 'zincrby', 'zinter', 'zintercard', 'zinterstore', 'zmpop',
+            'zmscore', 'zpopmin', 'zpopmax', 'bzpopmin', 'bzpopmax', 'bzmpop', 'zrandmember', 'zrange',
+            'zrangebyscore', 'zrangestore', 'zrank', 'zrem', 'zremrangebyrank', 'zremrangebyscore',
+            'zrevrange', 'zrevrangebyscore', 'zrevrank', 'zscore', 'zscan', 'zrangebylex',
+            'zrevrangebylex', 'zremrangebylex', 'zlexcount',
+
+            // HyperLogLog
+            'pfadd', 'pfmerge', 'pfcount',
+
+            // Key TTL precise
+            'pexpiretime',
+
+            // Geo
+            'geoadd', 'geohash', 'geopos', 'geodist', 'georadius', 'georadiusbymember', 'geosearch', 'geosearchstore',
+        ];
     }
 }

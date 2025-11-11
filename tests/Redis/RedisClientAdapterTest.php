@@ -158,7 +158,7 @@ class RedisClientAdapterTest extends TestCase
         $result = $adapter->hmget($firstArg, ['field']);
         self::assertSame(['v'], $result);
         self::assertSame([
-            ['method' => 'hmget', 'args' => ['s.'.$firstArg, ['field']]],
+            ['method' => 'hmget', 'args' => ['s.' . $firstArg, ['field']]],
         ], $client->calls);
     }
 

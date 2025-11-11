@@ -7,7 +7,7 @@ on:
 
 jobs:
   php-cs-fixer:
-    name: PHP-CS-Fixer
+    name: PHP Code Sniffer
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

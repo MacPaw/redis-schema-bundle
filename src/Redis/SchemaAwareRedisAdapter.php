@@ -17,14 +17,8 @@ class SchemaAwareRedisAdapter implements AdapterInterface, CacheInterface, Reset
     public function __construct(
         private readonly RedisAdapter $decorated,
         private readonly BaggageSchemaResolver $resolver,
+        private readonly ?string $defaultSchema = null,
     ) {
-    }
-
-    private function prefixKey(string $key): string
-    {
-        $schema = $this->resolver->getSchema();
-
-        return $schema ? $schema . '.' . $key : $key;
     }
 
     public function clear(string $prefix = ''): bool
@@ -99,5 +93,16 @@ class SchemaAwareRedisAdapter implements AdapterInterface, CacheInterface, Reset
     public function reset(): void
     {
         $this->decorated->clear($this->resolver->getSchema() ?? '');
+    }
+
+    private function prefixKey(string $key): string
+    {
+        $schema = $this->resolver->getSchema();
+
+        if ($this->defaultSchema !== null && $schema === $this->defaultSchema) {
+            return $key;
+        }
+
+        return $schema ? $schema . '.' . $key : $key;
     }
 }

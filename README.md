@@ -49,6 +49,19 @@ services:
             - '@Macpaw\SchemaContextBundle\Service\BaggageSchemaResolver'
 ```
 
+Decorate predis client with symfony-bundles/redis-bundle:
+
+```yaml
+# config/services.yaml
+
+services:
+    Macpaw\RedisSchemaBundle\Redis\RedisClientAdapter:
+        decorates: SymfonyBundles\RedisBundle\Redis\ClientInterface
+        arguments:
+            - '@.inner'
+            - '@Macpaw\SchemaContextBundle\Service\BaggageSchemaResolver'
+```
+
 ## Usage
 Anywhere you use Symfony cache services (injected via CacheInterface or AdapterInterface), your keys will automatically be prefixed based on the current schema.
 For example:
@@ -76,4 +89,3 @@ Feel free to open issues and submit pull requests.
 
 ## License
 This bundle is released under the MIT license.
-

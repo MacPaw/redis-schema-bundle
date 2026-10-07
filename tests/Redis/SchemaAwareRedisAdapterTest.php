@@ -141,4 +141,15 @@ class SchemaAwareRedisAdapterTest extends TestCase
         self::assertTrue($this->adapter->save($item));
         self::assertTrue($this->adapter->commit());
     }
+
+    public function testResetDelegatesToDecoratedAdapter(): void
+    {
+        $this->decorated->expects(self::once())
+            ->method('reset');
+
+        $this->decorated->expects(self::never())
+            ->method('clear');
+
+        $this->adapter->reset();
+    }
 }

@@ -1,5 +1,7 @@
 # Redis Schema Bundle
 
+![Redis Schema Bundle](.github/header.png)
+
 The **Redis Schema Bundle** provides automatic **Redis key namespacing** based on the current schema context, allowing **data isolation** in shared environments (e.g., staging, preview, multi-tenant).
 
 This bundle builds on top of [Schema Context Bundle](https://github.com/macpaw/schema-context-bundle) to propagate the schema context across the app and decorate your Redis cache.

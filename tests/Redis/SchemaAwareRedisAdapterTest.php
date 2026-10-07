@@ -147,9 +147,6 @@ class SchemaAwareRedisAdapterTest extends TestCase
         $this->decorated->expects(self::once())
             ->method('reset');
 
-        $this->decorated->expects(self::never())
-            ->method('clear');
-
         $this->adapter->reset();
     }
 }

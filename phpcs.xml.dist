@@ -18,12 +18,24 @@
     <rule ref="Squiz.PHP.LowercasePHPFunctions"/>
     <rule ref="Generic.PHP.RequireStrictTypes"/>
     <rule ref="Squiz.Arrays.ArrayBracketSpacing"/>
-    <rule ref="Generic.Arrays.DisallowLongArraySyntax.Found"></rule>
-    <rule ref="Squiz.Commenting.FunctionComment.SpacingAfterParamType"></rule>
+    <rule ref="Generic.Arrays.DisallowLongArraySyntax.Found"/>
+    <rule ref="Squiz.Commenting.FunctionComment.SpacingAfterParamType"/>
 
     <rule ref="Generic.PHP.ForbiddenFunctions">
         <properties>
-            <property name="forbiddenFunctions" type="array" value="eval=>NULL,dd=>NULL,die=>NULL,var_dump=>NULL,dump=>NULL,sizeof=>count,delete=>unset,print=>echo,echo=>NULL,print_r=>NULL,create_function=>NULL"/>
+            <property name="forbiddenFunctions" type="array">
+                <element key="eval" value="null"/>
+                <element key="dd" value="null"/>
+                <element key="die" value="null"/>
+                <element key="var_dump" value="null"/>
+                <element key="dump" value="null"/>
+                <element key="sizeof" value="count"/>
+                <element key="delete" value="unset"/>
+                <element key="print" value="echo"/>
+                <element key="echo" value="null"/>
+                <element key="print_r" value="null"/>
+                <element key="create_function" value="null"/>
+            </property>
         </properties>
     </rule>
     <rule ref="Squiz.WhiteSpace.FunctionSpacing">

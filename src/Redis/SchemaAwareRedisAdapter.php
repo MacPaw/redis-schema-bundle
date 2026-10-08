@@ -98,8 +98,6 @@ class SchemaAwareRedisAdapter implements AdapterInterface, CacheInterface, Reset
 
     public function reset(): void
     {
-        $schema = $this->resolver->getSchema();
-
-        $this->decorated->clear($schema === $this->resolver->getEnvironmentSchema() ? '' : $schema);
+        $this->decorated->reset();
     }
 }
